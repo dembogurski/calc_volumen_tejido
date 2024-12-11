@@ -1,4 +1,10 @@
-function calcular() {
+var mm_en_pixeles = 3.78;
+
+function sleep (time) {
+  return new Promise((resolve) => setTimeout(resolve, time));
+}
+
+async function calcular() {
     // Obtener los valores ingresados en el HTML
     const espesorTablita = parseFloat(document.getElementById("espesorTablita").value); // mm
     const anchoTablita = parseFloat(document.getElementById("anchoTablita").value); // mm
@@ -28,7 +34,7 @@ function calcular() {
     const logs = document.getElementById("logs");
     logs.innerHTML = `
         <h2>Log de Vueltas:</h2>
-        <table border="1" style="border-collapse: collapse; width: 100%;">
+        <table border="1" style="border-collapse: collapse; width: auto;">
             <thead>
                 <tr>
                     <th># Vuelta</th>
@@ -37,13 +43,18 @@ function calcular() {
                     <th>Ancho Acumulado (mm)</th>
                     <th>Consumo Vuelta (mm)</th>
                     <th>Consumo Vuelta (cm)</th>
-                    <th>Diferencia con el Primero (cm)</th>
+                    <th>Diff c/ Primero (cm)</th>
                 </tr>
             </thead>
             <tbody id="logBody"></tbody>
         </table>
     `;
     const logBody = document.getElementById("logBody");
+    
+    // Dibujar el rectangulo
+    
+    const canvas = new fabric.Canvas('canvas');
+    dibujarTablita(canvas,espesorTablita,anchoTablita );
 
     // Iterar hasta consumir todo el tejido
     while (longitudRestante > 0) {
@@ -110,6 +121,7 @@ function calcular() {
             `;
             longitudRestante = 0;
         }
+        await sleep(50);
     }
 
     // Calcular resultados finales
@@ -127,4 +139,22 @@ function calcular() {
         </div>
     `;
     document.getElementById("resultados").innerHTML = resultados;
+}
+
+function dibujarLinea(canvas)
+
+function dibujarTablita(canvas,espesorTablita,anchoTablita ){
+    const rectWidth = anchoTablita * mm_en_pixeles;  
+    const rectHeight = espesorTablita * mm_en_pixeles;   
+    const rect = new fabric.Rect({
+      width: rectWidth,
+      height: rectHeight,
+      fill: 'gray', // Color del rectángulo
+      originX: 'center',
+      originY: 'center',
+      left: canvas.width / 2,
+      top: canvas.height / 2  
+    });
+    
+    canvas.add(rect);
 }

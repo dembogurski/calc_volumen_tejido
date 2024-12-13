@@ -1,4 +1,7 @@
-var mm_en_pixeles = 3.78;
+var mm_en_pixeles = 3.78; //3.78
+
+var px = 0; // Punto Partida x
+var py = 0; // Punto Partida y
 
 function sleep (time) {
   return new Promise((resolve) => setTimeout(resolve, time));
@@ -63,10 +66,16 @@ async function calcular() {
         if (vueltas < 3) {
             // Antes de la cuarta vuelta (perímetro rectangular)
             perimetroEfectivo = 2 * (anchoAcumulado + altoAcumulado);
+            dibujarPerimetroRectangular(canvas,anchoAcumulado,altoAcumulado);
+            //break;
         } else {
             // A partir de la cuarta vuelta (perímetro con semicirculaciones)
             const radio = altoAcumulado / 2; // Radio de los semicirculos
             perimetroEfectivo = 2 * anchoAcumulado + Math.PI * altoAcumulado;
+            dibujarPerimetroCircular(canvas,anchoAcumulado,altoAcumulado);
+            if(vueltas > 200){
+                break;
+            }
         }
 
         // Ajustar consumo por elasticidad
@@ -76,6 +85,8 @@ async function calcular() {
         if (vueltas === 0) {
             consumoPrimero = consumoVuelta;
         }
+        var cosumoNeto = parseFloat(consumoVuelta / 10 ).toFixed(1); 
+        document.getElementById("info").innerHTML = `Vuelta: ${vueltas}         &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;         Consumo Tejido: ${cosumoNeto}cm`;
 
         // Calcular la diferencia con respecto al primero en cm
         const diferenciaPrimero =
@@ -121,7 +132,7 @@ async function calcular() {
             `;
             longitudRestante = 0;
         }
-        await sleep(50);
+        await sleep(100);
     }
 
     // Calcular resultados finales
@@ -141,11 +152,113 @@ async function calcular() {
     document.getElementById("resultados").innerHTML = resultados;
 }
 
-function dibujarLinea(canvas)
+function dibujarPerimetroRectangular(canvas,anchoAcumulado,altoAcumulado){
+    var espesor_tela = 1 * mm_en_pixeles;
+    
+    var ancho = anchoAcumulado * mm_en_pixeles;
+    var alto  = altoAcumulado * mm_en_pixeles;
+    
+    // Linea de arriba
+    const telaArriba = new fabric.Line([px, py, px + ancho, py], {
+        stroke: 'blue',  
+        strokeWidth: espesor_tela    
+    });
+    canvas.add(telaArriba);
+    
+    // Linea vertical derecha
+    const telaVD = new fabric.Line([px + ancho, py, px + ancho , py + alto ], {
+        stroke: 'blue',  
+        strokeWidth: espesor_tela    
+    });
+    canvas.add(telaVD);
+    
+    // Linea de abajo
+    const telaAbajo = new fabric.Line([px + ancho, py + alto, px , py + alto], {
+        stroke: 'blue',  
+        strokeWidth: espesor_tela    
+    });
+    canvas.add(telaAbajo);
+    
+    // Linea vertical izquierda
+    const telaVI = new fabric.Line([px  , py + alto, px  , py  ], {
+        stroke: 'blue',  
+        strokeWidth: espesor_tela    
+    });
+    canvas.add(telaVI);
+    
+    var k = 0.5;    
+    px = px - (espesor_tela / 2) - k;
+    py = py - (espesor_tela / 2) - k;
+}
+
+function dibujarPerimetroCircular(canvas,anchoAcumulado,altoAcumulado ){
+    var espesor_tela = 1 * mm_en_pixeles;
+    
+    var ancho = anchoAcumulado * mm_en_pixeles;
+    var alto  = altoAcumulado * mm_en_pixeles;
+    
+    
+    
+    // Linea de arriba
+    const telaArriba = new fabric.Line([px, py, px + ancho, py], {
+        stroke: 'blue',  
+        strokeWidth: espesor_tela    
+    });
+    canvas.add(telaArriba);
+    
+    // Semicirculo Derecho
+    
+    const centerXD = px + ancho;
+    const centerYD = py + alto / 2;
+    const radius = alto / 2;
+    
+    
+    const rightHalf = new fabric.Path(
+        `M ${centerXD},${centerYD  - radius} 
+         A ${radius},${radius} 0 0,1 ${centerXD},${centerYD + radius}`, 
+        {
+            fill: '',  
+            stroke: 'blue', // Color del trazo
+            strokeWidth: espesor_tela 
+        }
+    );
+    canvas.add(rightHalf);
+
+      
+    // Linea de abajo
+    const telaAbajo = new fabric.Line([px + ancho, py + alto, px , py + alto], {
+        stroke: 'blue',  
+        strokeWidth: espesor_tela    
+    });
+    canvas.add(telaAbajo);
+    
+    // Semicirculo izquierdo
+    
+    const centerXI = px;
+    const centerYI = py + alto / 2;
+     
+    
+    const leftHalf = new fabric.Path(
+        `M ${centerXI},${centerYI  - radius} 
+         A ${radius},${radius} 0 0,0 ${centerXI},${centerYI +  radius}`, 
+        {
+            fill: '', // Sin relleno
+            stroke: 'blue', // Color del trazo
+            strokeWidth: espesor_tela
+        }
+    );
+    canvas.add(leftHalf);
+    
+     
+    var k = 0.5;    
+    px = px - (espesor_tela / 2) - k;
+    py = py - (espesor_tela / 2) - k;
+}
 
 function dibujarTablita(canvas,espesorTablita,anchoTablita ){
     const rectWidth = anchoTablita * mm_en_pixeles;  
     const rectHeight = espesorTablita * mm_en_pixeles;   
+     
     const rect = new fabric.Rect({
       width: rectWidth,
       height: rectHeight,
@@ -155,6 +268,9 @@ function dibujarTablita(canvas,espesorTablita,anchoTablita ){
       left: canvas.width / 2,
       top: canvas.height / 2  
     });
+    
+    px = rect.left - rect.width / 2;   // Defino el punto de partida de forma global X
+    py = rect.top - rect.height / 2;   // Defino el punto de partida de forma global Y    
     
     canvas.add(rect);
 }
